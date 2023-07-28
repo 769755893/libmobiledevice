@@ -1,0 +1,4 @@
+file(GLOB INCLUDE_FILES "plist/*.h")
+install(FILES
+        ${INCLUDE_FILES}
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/plist)

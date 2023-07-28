@@ -1,0 +1,78 @@
+cmake_minimum_required(VERSION 3.8)
+
+project(LibMobileDevice)
+
+
+message(${CMAKE_SYSTEM_NAME})
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+
+message("Build architectures for Mac OS X Arm64")
+SET(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "Build architectures for Mac OS X" FORCE)
+
+ENDIF()
+
+
+set(GLUE_INC_DIR ${CMAKE_CURRENT_LIST_DIR}/di/glue/include)
+set(GLUE_LIB_DIR ${CMAKE_CURRENT_LIST_DIR}/di/glue/lib)
+
+set(PLIST_INC_DIR ${CMAKE_CURRENT_LIST_DIR}/di/plist/include)
+set(PLIST_LIB_DIR ${CMAKE_CURRENT_LIST_DIR}/di/plist/lib)
+
+
+set(USB_INC_DIR ${CMAKE_CURRENT_LIST_DIR}/di/usb/include)
+set(USB_LIB_DIR ${CMAKE_CURRENT_LIST_DIR}/di/usb/lib)
+
+set(DEVICE_INC_DIR ${CMAKE_CURRENT_LIST_DIR}/di/device/include)
+set(DEVICE_LIB_DIR ${CMAKE_CURRENT_LIST_DIR}/di/device/lib)
+
+add_library(glue_lib STATIC IMPORTED)
+set_target_properties(glue_lib PROPERTIES IMPORTED_LOCATION ${GLUE_LIB_DIR}/libimobiledevice-glue-1.0.a)
+
+add_library(plist_lib STATIC IMPORTED)
+set_target_properties(plist_lib PROPERTIES IMPORTED_LOCATION ${PLIST_LIB_DIR}/libplist-2.0.a)
+
+add_library(usb_lib STATIC IMPORTED)
+set_target_properties(usb_lib PROPERTIES IMPORTED_LOCATION ${USB_LIB_DIR}/libusbmuxd-2.0.a)
+
+add_library(device_lib STATIC IMPORTED)
+set_target_properties(device_lib PROPERTIES IMPORTED_LOCATION ${DEVICE_LIB_DIR}/libimobiledevice-1.0.a)
+
+target_link_libraries(device_lib INTERFACE glue_lib plist_lib usb_lib)
+target_link_directories(device_lib INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/di/glue/include ${CMAKE_CURRENT_SOURCE_DIR}/di/plist/include ${CMAKE_CURRENT_SOURCE_DIR}/di/usb/include)
+
+message("CONFIG BUILD TYPE RELEASE")
+set(CMAKE_BUILD_TYPE RELEASE CACHE STRING "Choose the type of build, option are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
+
+message("CONFIG BUILD PATH")
+
+set(BUILD_PATH ${CMAKE_CURRENT_LIST_DIR}/build)
+set(BUILD_LIB_DIR ${BUILD_PATH}/lib)
+
+file(GLOB_RECURSE DELETE_FILES ${BUILD_PATH}/*.*)
+foreach(F ${DELETE_FILES})
+message("CLEAN ${F}")
+LIST(REMOVE_ITEM F)
+endforeach()
+
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${BUILD_LIB_DIR})
+
+include_directories(${GLUE_INC_DIR})
+include_directories(${PLIST_INC_DIR})
+include_directories(${USB_INC_DIR})
+include_directories(${DEVICE_INC_DIR})
+link_directories(${GLUE_LIB_DIR})
+link_directories(${PLIST_LIB_DIR})
+link_directories(${USB_LIB_DIR})
+link_directories(${DEVICE_LIB_DIR})
+
+# set(H ${CMAKE_CURRENT_LIST_DIR}/di/common/userpref.h)
+set(C ${CMAKE_CURRENT_LIST_DIR}/interface/device.c)
+
+add_executable(LibMobileDevice ${C})
+
+find_package(OpenSSL REQUIRED)
+target_link_libraries(LibMobileDevice PRIVATE device_lib OpenSSL::SSL OpenSSL::Crypto)
+target_link_directories(LibMobileDevice PRIVATE PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/di/glue/include ${CMAKE_CURRENT_SOURCE_DIR}/di/plist/include ${CMAKE_CURRENT_SOURCE_DIR}/di/usb/include)
+
+
+set_target_properties(LibMobileDevice PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${BUILD_LIB_DIR})
