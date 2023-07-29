@@ -56,22 +56,24 @@ endforeach()
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${BUILD_LIB_DIR})
 
-include_directories(${GLUE_INC_DIR})
-include_directories(${PLIST_INC_DIR})
-include_directories(${USB_INC_DIR})
-include_directories(${DEVICE_INC_DIR})
-link_directories(${GLUE_LIB_DIR})
-link_directories(${PLIST_LIB_DIR})
-link_directories(${USB_LIB_DIR})
-link_directories(${DEVICE_LIB_DIR})
 
-# set(H ${CMAKE_CURRENT_LIST_DIR}/di/common/userpref.h)
-set(C ${CMAKE_CURRENT_LIST_DIR}/interface/device.c)
 
-add_executable(LibMobileDevice ${C})
+include_directories(${GLUE_INC_DIR} ${PLIST_INC_DIR} ${USB_INC_DIR} ${DEVICE_INC_DIR})
+link_directories(${GLUE_LIB_DIR} ${PLIST_LIB_DIR} ${USB_LIB_DIR} ${DEVICE_LIB_DIR})
 
+set(S ${CMAKE_CURRENT_LIST_DIR}/interface)
+add_subdirectory(${S})
 find_package(OpenSSL REQUIRED)
-target_link_libraries(LibMobileDevice PRIVATE device_lib OpenSSL::SSL OpenSSL::Crypto)
+
+add_executable(LibMobileDevice ${S}/core.c)
+
+set(INC_DEVICE_DIR ${S}/device/header)
+set(INC_RECOVERY_DIR ${S}/recovery/header)
+
+target_link_libraries(LibMobileDevice PRIVATE device_lib OpenSSL::SSL OpenSSL::Crypto deviceCore recoveryCore)
+
+target_link_directories(LibMobileDevice PRIVATE ${INC_DEVICE_DIR} ${INC_RECOVERY_DIR})
+
 target_link_directories(LibMobileDevice PRIVATE PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/di/glue/include ${CMAKE_CURRENT_SOURCE_DIR}/di/plist/include ${CMAKE_CURRENT_SOURCE_DIR}/di/usb/include)
 
 

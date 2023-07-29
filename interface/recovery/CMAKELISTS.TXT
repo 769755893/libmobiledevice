@@ -1,0 +1,14 @@
+file(GLOB IF "header/*.h")
+file(GLOB SF "source/*.c")
+
+# foreach(f ${IF})
+#         LIST(APPEND HF ${f})
+# endforeach()
+
+foreach(f ${SF})
+        LIST(APPEND SF ${f})
+endforeach()
+
+add_library(recoveryCore STATIC ${SF})
+
+target_link_libraries(recoveryCore device_lib)
